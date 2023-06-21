@@ -1,0 +1,9 @@
+Build target 'Target 1'
+compiling test2.c...
+test2.c(45): warning C280: 'cline': unreferenced local variable
+test2.c(38): warning C291: not every exit path returns a value
+linking...
+Program Size: data=18.0 xdata=0 code=370
+creating hex file from ".\Objects\Test"...
+".\Objects\Test" - 0 Error(s), 2 Warning(s).
+Build Time Elapsed:  00:00:00

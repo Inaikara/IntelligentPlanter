@@ -1,0 +1,533 @@
+C51 COMPILER V9.60.0.0   ZZJPRO                                                            06/22/2022 21:12:46 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE ZZJPRO
+OBJECT MODULE PLACED IN .\Objects\zzjpro.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE zzjpro.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\zz
+                    -jpro.lst) TABS(2) OBJECT(.\Objects\zzjpro.obj)
+
+line level    source
+
+   1          #include<reg52.h>
+   2          #include<intrins.h>
+   3          #define uchar unsigned char
+   4          #define uint  unsigned int
+   5          
+   6          sbit in1=P1^0;       
+   7          sbit in2=P1^1;       
+   8          sbit pulse_x=P1^2;   
+   9          sbit dir_x=P1^3;   
+  10          sbit pulse_y=P1^4;   
+  11          sbit dir_y=P1^5;   
+  12          sbit pulse_z=P1^6;   
+  13          sbit dir_z=P1^7;   
+  14          sbit relay=P2^0;
+  15          sbit trig=P2^4;                  
+  16          sbit echo=P2^5;
+  17          sbit dula=P2^6;      
+  18          sbit wela=P2^7;      
+  19          sbit bee=P2^3;
+  20              
+  21          bit  eflag=0;
+  22          uint temp1=0;
+  23          unsigned char rline=0xee;  
+  24          unsigned int time;
+  25          unsigned long s;   
+  26          uchar flag=0;
+  27          uchar a;
+  28          uchar code table_dula[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,
+  29                              0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71};
+  30          uchar code table_wela[]={0xfe,0xfd,0xfb,0xf7,0xef,0xdf};
+  31          uchar Recive_table[15];
+  32          uint i;
+  33          
+  34          void delay_us(uchar us);
+  35          void delayms(uint xms);
+  36          void delay(uint x);
+  37          uint bitnum(uint num);   
+  38          uchar matrixkeyscan();
+  39          void pump(uchar sta);          
+  40          void grab(bit dir);          
+  41          void manipulator(uchar dir);   
+  42          void smgdisplay(uchar num,uchar loc);
+  43          void start();
+  44          void count();
+  45          void run_ultrasonic();
+  46          void Init_timer();
+  47          // void Init_uart();
+  48          void Usart_Init();
+  49          void SENT_At(uchar *At_Comd);
+  50          void WIFI_Init();
+  51          // void Init_esp();
+  52          void Init();
+  53          void move_x(uchar dir);
+  54          void move_y(uchar dir);
+C51 COMPILER V9.60.0.0   ZZJPRO                                                            06/22/2022 21:12:46 PAGE 2   
+
+  55          void move_z(uchar dir);
+  56          void chuanxing();
+  57          void sendChar(uchar a);
+  58          void sendString(uchar *s);
+  59          
+  60          
+  61          void main()
+  62          {
+  63   1        uchar value;
+  64   1        Init();
+  65   1        run_ultrasonic();
+  66   1        while(1)
+  67   1        {
+  68   2          if(flag==0)
+  69   2          {
+  70   3            value=matrixkeyscan();
+  71   3            manipulator(value);
+  72   3          }
+  73   2            chuanxing();
+  74   2        }
+  75   1      }
+  76          
+  77          void delay_us(uchar us)
+  78          {
+  79   1        while(us--);
+  80   1      }
+  81           
+  82          
+  83          void delayms(uint xms)
+  84          {
+  85   1        uint i,j;
+  86   1        for(i=xms;i>0;i--)
+  87   1          for(j=110;j>0;j--);
+  88   1      }
+  89          
+  90          void delay(uint x)
+  91          {
+  92   1        uint i,j;
+  93   1        for(i=x;i>0;i--)
+  94   1          for(j=10;j>0;j--);
+  95   1      }
+  96          uint bitnum(uint num)
+  97          {
+  98   1        switch(num)
+  99   1        {
+ 100   2          case 14: return 1;
+ 101   2          break;
+ 102   2          case 13: return 2;
+ 103   2          break;
+ 104   2          case 11: return 3;
+ 105   2          break;
+ 106   2          case 7: return 4;
+ 107   2          break;
+ 108   2        }
+ 109   1        return 0;
+ 110   1      }
+ 111          
+ 112          uchar matrixkeyscan()            //鐭╅樀閿洏鎵弿鍑芥暟
+ 113          {
+ 114   1        unsigned char temp=0;
+ 115   1        unsigned char key=0;   
+ 116   1        unsigned int rnum;
+C51 COMPILER V9.60.0.0   ZZJPRO                                                            06/22/2022 21:12:46 PAGE 3   
+
+ 117   1        unsigned int cnum;  
+ 118   1        P3=0xf0+(rline&0x0f);       //灏嗘煇琛岀嚎缃綆鐢靛钩
+ 119   1        temp=P3;
+ 120   1        temp=temp&0xf0;
+ 121   1        if(temp!=0xf0)
+ 122   1        {
+ 123   2          //delay(10);                //鍘绘姈鍔?
+ 124   2          temp=P3;
+ 125   2          temp=temp&0xf0;
+ 126   2          
+ 127   2          if(temp!=0xf0)
+ 128   2          {
+ 129   3            cnum=bitnum(temp/16);   //寰楀埌鍒楃嚎鏁板€?
+ 130   3            temp=P3;
+ 131   3            temp=temp&0x0f;
+ 132   3            rnum=bitnum(temp);      //寰楀埌琛岀嚎鏁板€?
+ 133   3            key=(rnum-1)*4+cnum-1;  //璁＄畻寰楀埌key鍊?
+ 134   3            temp=P3;
+ 135   3            return key;
+ 136   3          }
+ 137   2        } 
+ 138   1        rline=_crol_(rline,1); 
+ 139   1        return key;
+ 140   1      }
+ 141          
+ 142          void move_x(uchar dir)
+ 143          {
+ 144   1        dir_x = dir;        
+ 145   1        delay(1);
+ 146   1        pulse_x=0;
+ 147   1        delay(1);
+ 148   1        pulse_x=1;
+ 149   1        delay(1); 
+ 150   1      }
+ 151          void move_y(uchar dir)
+ 152          {
+ 153   1        dir_y=dir;
+ 154   1        delay(1);
+ 155   1        pulse_y= 0;
+ 156   1        delay(1);
+ 157   1        pulse_y= 1;
+ 158   1        delay(1);
+ 159   1      }
+ 160          
+ 161          void move_z(uchar dir)
+ 162          {
+ 163   1        dir_z=dir;
+ 164   1        delay(1);
+ 165   1        pulse_z=0;
+ 166   1        delay(1);
+ 167   1        pulse_z=1;
+ 168   1        delay(1); 
+ 169   1      }
+ 170          
+ 171          void grab(bit dir)  //0寮€锛?闂?
+ 172          {
+ 173   1        in1=dir,in2=~dir;
+ 174   1      }
+ 175          
+ 176          void pump(uchar sta)//0寮€锛?鍏?
+ 177          {
+ 178   1        relay=sta;    
+C51 COMPILER V9.60.0.0   ZZJPRO                                                            06/22/2022 21:12:46 PAGE 4   
+
+ 179   1      }
+ 180          
+ 181          void manipulator(uchar dir)
+ 182          {
+ 183   1        switch(dir)
+ 184   1        {
+ 185   2          case 0 :
+ 186   2            in1=0,in2=0;
+ 187   2            relay=1;
+ 188   2            break;
+ 189   2          case 8 :
+ 190   2            move_z(1);
+ 191   2            break;
+ 192   2          case 9 :
+ 193   2            move_x(1);
+ 194   2            break;
+ 195   2          case 10 :
+ 196   2            move_z(0);
+ 197   2            break;
+ 198   2          case 11 :
+ 199   2            grab(0);
+ 200   2            break;
+ 201   2          case 12 :
+ 202   2            move_y(1);
+ 203   2            break;
+ 204   2          case 13 :
+ 205   2            move_x(0);
+ 206   2            break;
+ 207   2          case 14 :
+ 208   2            move_y(0);
+ 209   2            break;
+ 210   2          case 15 :
+ 211   2            grab(1);
+ 212   2            break;
+ 213   2        }
+ 214   1      }
+ 215          
+ 216          void chuanxing()
+ 217          {
+ 218   1        if(flag==1)
+ 219   1        {
+ 220   2          flag=0;
+ 221   2          switch(a&0x0f)  //鍙栦綆4浣?
+ 222   2          {
+ 223   3            case 0:
+ 224   3              //涓嬫斁    
+ 225   3              while((s>7)&&(RI==0))
+ 226   3              {
+ 227   4                if(temp1>=200)
+ 228   4                {
+ 229   5                  run_ultrasonic();
+ 230   5                  temp1=0;
+ 231   5                }
+ 232   4                temp1=temp1+1;
+ 233   4                move_z(0);
+ 234   4              }
+ 235   3              //鎵ц
+ 236   3              if(s<=7)
+ 237   3              {
+ 238   4                switch(a&0xf0)//鍙栭珮4浣?
+ 239   4                {
+ 240   5                  case 16 :
+C51 COMPILER V9.60.0.0   ZZJPRO                                                            06/22/2022 21:12:46 PAGE 5   
+
+ 241   5                    grab(1);
+ 242   5                    delayms(5000);
+ 243   5                    in1=0,in2=0;
+ 244   5                    break;    
+ 245   5                  case 32 : 
+ 246   5                    pump(0);
+ 247   5                    delayms(50);
+ 248   5                    pump(1);
+ 249   5                    break;
+ 250   5                }
+ 251   4                temp1=0;
+ 252   4                //涓婂崌 
+ 253   4                while(s<15)
+ 254   4                {
+ 255   5                  if(temp1>=5000)
+ 256   5                  {
+ 257   6                    run_ultrasonic();
+ 258   6                    temp1=0;
+ 259   6                  }
+ 260   5                  temp1=temp1+1;
+ 261   5                  move_z(1);
+ 262   5                }
+ 263   4                if(s>=15)
+ 264   4                {
+ 265   5                    grab(0);
+ 266   5                    delayms(5000);
+ 267   5                    in1=0,in2=0;
+ 268   5                    ES=0;       
+ 269   5                }       
+ 270   4              }
+ 271   3            break;              
+ 272   3            case 1:                    //0b0001:
+ 273   3              while(!flag)
+ 274   3              {
+ 275   4                move_y(1);      
+ 276   4              }
+ 277   3              break;
+ 278   3            case 2:                    //00000010B:
+ 279   3              while(!flag)
+ 280   3              {
+ 281   4                move_y(0);       
+ 282   4              }
+ 283   3              break;
+ 284   3            case 4:                    //00000100B:
+ 285   3              while(!flag)
+ 286   3              {
+ 287   4                move_x(1);      
+ 288   4              }
+ 289   3              break;
+ 290   3            case 5:                    //00000101B:
+ 291   3              while(!flag)
+ 292   3              {
+ 293   4                move_y(1);
+ 294   4                move_x(1);
+ 295   4              }
+ 296   3              break;
+ 297   3            case 6:                      //00000110B:
+ 298   3              while(!flag)
+ 299   3              {
+ 300   4                move_y(0);
+ 301   4                move_x(1);
+ 302   4              }
+C51 COMPILER V9.60.0.0   ZZJPRO                                                            06/22/2022 21:12:46 PAGE 6   
+
+ 303   3              break;
+ 304   3            case 8:                       //00001000B:
+ 305   3              while(!flag)
+ 306   3              {
+ 307   4                move_x(0);
+ 308   4              }
+ 309   3              break;
+ 310   3            case 11:                        //00001001B:
+ 311   3              while(!flag)
+ 312   3              {
+ 313   4                move_y(1);
+ 314   4                move_x(0);
+ 315   4              }
+ 316   3              break;
+ 317   3            case 12:                       //00001010B:
+ 318   3              while(!flag)
+ 319   3              {
+ 320   4                move_y(0);
+ 321   4                move_x(0);
+ 322   4              }
+ 323   3              break;
+ 324   3            case 14:                       //00001111B:   
+ 325   3              while(!flag);
+ 326   3              break;
+ 327   3          }        
+ 328   2        }
+ 329   1      }
+ 330          
+ 331          void smgdisplay(uchar num,uchar loc)
+ 332          {
+ 333   1            dula=1;
+ 334   1            P0=table_dula[num];
+ 335   1            dula=0;
+ 336   1            P0=0xff;  
+ 337   1            wela=1;
+ 338   1            P0=table_wela[loc];
+ 339   1            wela=0;
+ 340   1      }
+ 341          
+ 342          void start()                            //???????
+ 343          {   
+ 344   1          trig=1;                         
+ 345   1          _nop_();
+ 346   1          _nop_();
+ 347   1          _nop_();
+ 348   1          _nop_();
+ 349   1          _nop_();
+ 350   1          _nop_();
+ 351   1          _nop_();
+ 352   1          _nop_();
+ 353   1          _nop_();
+ 354   1          _nop_();
+ 355   1          _nop_();
+ 356   1          _nop_();
+ 357   1          trig=0;                  
+ 358   1      }
+ 359          
+ 360          void count()                            //????
+ 361          {   
+ 362   1        time=TH0*256+TL0;       
+ 363   1        s=time*1.7/100;               
+ 364   1        TH0=0x00;           
+C51 COMPILER V9.60.0.0   ZZJPRO                                                            06/22/2022 21:12:46 PAGE 7   
+
+ 365   1        TL0=0x00; 
+ 366   1      }
+ 367          
+ 368          void run_ultrasonic()
+ 369          {
+ 370   1        start();
+ 371   1        while(echo==0);
+ 372   1        TR0=1;         
+ 373   1        while((echo==1)||(eflag==1)); 
+ 374   1        TR0=0;  
+ 375   1        eflag=0;  
+ 376   1        count();         
+ 377   1        smgdisplay(s,0);
+ 378   1      }
+ 379          
+ 380          
+ 381          
+ 382          //鍙戦€佷竴涓瓧绗?
+ 383          void sendChar(uchar a)
+ 384          {
+ 385   1        SBUF = a;
+ 386   1        while(TI==0);
+ 387   1        TI=0;
+ 388   1        
+ 389   1      }
+ 390           
+ 391          //鍙戦€佸瓧绗︿覆
+ 392          void sendString(uchar *s)
+ 393          {
+ 394   1        while(*s!='\0')
+ 395   1        {
+ 396   2          sendChar(*s);
+ 397   2          s++;
+ 398   2        }
+ 399   1          
+ 400   1      }
+ 401          
+ 402          
+ 403          void Init_timer()
+ 404          {
+ 405   1        TMOD=0x01;         
+ 406   1        TH0=0x00;        
+ 407   1        TL0=0x00;                  
+ 408   1        ET0=1;  
+ 409   1      }
+ 410          
+ 411          
+ 412          
+ 413          void Usart_Init()
+ 414          {
+ 415   1        SCON = 0x50;
+ 416   1        TMOD |= 0x20;
+ 417   1        TH1 = 0xfd;
+ 418   1        TL1 = TH1;
+ 419   1        PCON = 0;
+ 420   1        TR1 = 1;
+ 421   1      
+ 422   1      }
+ 423          
+ 424          void SENT_At(uchar *At_Comd)
+ 425          {
+ 426   1        ES = 0;
+C51 COMPILER V9.60.0.0   ZZJPRO                                                            06/22/2022 21:12:46 PAGE 8   
+
+ 427   1        while(*At_Comd!='\0')
+ 428   1        {
+ 429   2          SBUF = *At_Comd;
+ 430   2          while(!TI);
+ 431   2          TI = 0;
+ 432   2          delay_us(5);
+ 433   2          At_Comd++;
+ 434   2        }
+ 435   1      }
+ 436          
+ 437          void WIFI_Init()
+ 438          {
+ 439   1        SENT_At("AT+CIPMUX=1\r\n");//多连接模式
+ 440   1        delayms(10);
+ 441   1          bee=0;
+ 442   1        //发送成功后亮灯
+ 443   1        SENT_At("AT+CIPSERVER=1,8080\r\n");//设置端口号
+ 444   1        smgdisplay(0,1);//设置成功后亮灯
+ 445   1        delayms(10);
+ 446   1          bee=1;
+ 447   1        smgdisplay(0,1);//设置成功后亮灯
+ 448   1        ES = 1;
+ 449   1      }
+ 450           
+ 451          
+ 452          
+ 453          void Init()
+ 454          {
+ 455   1        Init_timer();
+ 456   1        Usart_Init();
+ 457   1        WIFI_Init();
+ 458   1        //Init_esp();
+ 459   1        EA = 1;   
+ 460   1      }
+ 461          
+ 462          void InterruptTimer0() interrupt 1        
+ 463          {
+ 464   1        eflag=1;
+ 465   1      }
+ 466          
+ 467          
+ 468          void ser() interrupt 4 
+ 469          {
+ 470   1      
+ 471   1        if(RI==1)
+ 472   1        {
+ 473   2          RI=0;
+ 474   2          Recive_table[i] = SBUF; 
+ 475   2          if(Recive_table[0]=='+')
+ 476   2            i++;
+ 477   2          else
+ 478   2            i = 0;
+ 479   2          if(i>=10)
+ 480   2          {
+ 481   3            if((Recive_table[0]=='+')&&(Recive_table[1]=='I')&&(Recive_table[2]=='P')&&(Recive_table[3]=='D'))
+ 482   3            {
+ 483   4              a=Recive_table[9];
+ 484   4              smgdisplay(a,1);
+ 485   4              flag=1;       
+ 486   4            }
+ 487   3            i = 0;
+ 488   3          }   
+C51 COMPILER V9.60.0.0   ZZJPRO                                                            06/22/2022 21:12:46 PAGE 9   
+
+ 489   2        }
+ 490   1        else
+ 491   1         TI = 0;
+ 492   1      
+ 493   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1168    ----
+   CONSTANT SIZE    =     58    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     28    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

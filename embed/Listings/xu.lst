@@ -1,0 +1,128 @@
+C51 COMPILER V9.60.0.0   XU                                                                05/04/2022 21:35:52 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE XU
+OBJECT MODULE PLACED IN .\Objects\xu.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE xu.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\xu.lst
+                    -) TABS(2) OBJECT(.\Objects\xu.obj)
+
+line level    source
+
+   1          #include<plantmachine.h>  
+   2          str={"Distance:"};      //lcd?????
+*** WARNING C231 IN LINE 2 OF xu.c: 'str': redefinition
+*** ERROR C247 IN LINE 2 OF xu.c: non-address/-constant initializer
+   3          juli={"0000cm"};        //lcd???????
+*** ERROR C231 IN LINE 3 OF xu.c: 'juli': redefinition
+   4          change={"\r\n"};        //???????
+*** ERROR C231 IN LINE 4 OF xu.c: 'change': redefinition
+   5          jg={"Waring"};          //????
+   6          flag=0;                             //???(???)
+   7          flag1=0; 
+   8          
+   9          
+  10          void wcmd(unsigned char cmd)            //???
+  11          {
+  12   1          RS = 0;                     
+  13   1          P0 = cmd;
+  14   1        delayms(5);
+  15   1          EN = 1;
+  16   1        delayms(5);
+  17   1          EN = 0;    
+  18   1      }
+  19          void wdat(unsigned char dat)            //???
+  20          {
+  21   1        RS = 1;
+  22   1        P0 = dat;
+  23   1        delayms(5);
+  24   1        EN = 1;
+  25   1        delayms(5);
+  26   1        EN = 0;
+  27   1      }  
+  28          void Init()                             //1602???
+  29          { U1=0;                           
+  30   1          U2=0;
+  31   1          EN=0;
+  32   1          wcmd(0x38);                         //????:8?,2?,5*7
+  33   1          wcmd(0x0c);                         //????:??,???,??
+  34   1          wcmd(0x06);                         //????:????,????
+  35   1          wcmd(0x01);                         //??   
+  36   1      }
+  37          
+  38          void wstr(unsigned char addr,unsigned char *p)  
+  39          {
+  40   1          wcmd(addr);     
+  41   1          while(*p!='\0')  
+  42   1          {   wdat(*p);   
+  43   2              p++;        
+  44   2          }    
+  45   1      }
+  46          void start()                            //???????
+  47          {   
+  48   1          trig=1;                         
+  49   1          _nop_();
+  50   1          _nop_();
+C51 COMPILER V9.60.0.0   XU                                                                05/04/2022 21:35:52 PAGE 2   
+
+  51   1          _nop_();
+  52   1          _nop_();
+  53   1          _nop_();
+  54   1          _nop_();
+  55   1          _nop_();
+  56   1          _nop_();
+  57   1          _nop_();
+  58   1          _nop_();
+  59   1          _nop_();
+  60   1          _nop_();
+  61   1          trig=0;                  
+  62   1      } 
+  63          void count()                            //????
+  64          {   time=TH0*256+TL0;       
+  65   1          s=time*1.7/100;           
+  66   1          if((s>400)||(s<5)||(flag==1) )
+  67   1          {   wstr(0xC0,"Waring!");
+  68   2              buzz();
+  69   2              flag1=1;
+  70   2          }
+  71   1          else                
+  72   1          {
+  73   2              juli[3] = s%10+0x30;        
+  74   2              juli[2] = s/10%10+0x30;     
+  75   2              juli[1] = s/100%10+0x30;        
+  76   2              juli[0] = s/1000+0x30;        
+  77   2              wstr(0xC0,"       ");
+  78   2              wstr(0xC0,juli);
+  79   2              flag1=0;
+  80   2          }
+  81   1          TH0=0x00;           
+  82   1          TL0=0x00;           
+  83   1          flag=0;             
+  84   1       }
+  85          void uart()                             //??
+  86          {   
+  87   1          TMOD |= 0x20;                       //?????1  
+  88   1          TH1 = 0xFD;                         //???9600    
+  89   1          TL1 = 0xFD;
+  90   1          TR1 = 1;                            //?????
+  91   1          REN = 1;                            //??????
+  92   1          SM0 = 0;                            //???????1
+  93   1          SM1 = 1;                            
+  94   1          ES = 1;                             //??????
+  95   1      }
+  96          
+  97          void buzz()
+  98          {
+  99   1          bi=0;
+ 100   1          delayms(200);
+ 101   1          bi=1;
+ 102   1      }
+ 103          void delayms(unsigned int xms)     
+ 104          { 
+ 105   1          unsigned int i,j;
+ 106   1          for(i=xms;i>0;i--)
+ 107   1              for(j=110;j>0;j--);
+ 108   1      }
+ 109          
+ 110          
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  3 ERROR(S)

@@ -1,0 +1,56 @@
+C51 COMPILER V9.60.0.0   TEST3                                                             05/05/2022 21:24:45 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE TEST3
+OBJECT MODULE PLACED IN .\Objects\test3.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE test3.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\tes
+                    -t3.lst) TABS(2) OBJECT(.\Objects\test3.obj)
+
+line level    source
+
+   1          //#include <reg52.h>
+   2          //#define uchar unsigned char
+   3          //#define uint unsigned int
+   4          //sbit dula=P2^6;         //??
+   5          //sbit wela=P2^7;         //??
+   6          //uchar code table1[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,
+   7          //                    0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71};     //??????
+   8          //uchar code table2[]={0xfe,0xfd,0xfb,0xf7,0xef,0xdf};      //??????
+   9          //void delayms(uint);       //????
+  10          //void main()
+  11          //{
+  12          //  while(1)
+  13          //  {
+  14          //    uint a;
+  15          //    for(a=0;a<6;a++)
+  16          //    {
+  17          //      dula=1;
+  18          //      P0=table1[a];
+  19          //      dula=0;       //??
+  20          //      P0=table2[a];
+  21          //      wela=1;
+  22          //      wela=0;       //??
+  23          //      delayms(1);     //????
+  24          //    }
+  25          //  }
+  26          //}
+  27          //void delayms(uint xms)
+  28          //{
+  29          //  uint i,j;
+  30          //  for(i=xms;i>0;i--)
+  31          //    for(j=113;j>0;j--);
+  32          //}
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

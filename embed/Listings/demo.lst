@@ -1,0 +1,123 @@
+C51 COMPILER V9.60.0.0   DEMO                                                              05/09/2022 15:08:29 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE DEMO
+OBJECT MODULE PLACED IN .\Objects\demo.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE demo.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\demo
+                    -.lst) TABS(2) OBJECT(.\Objects\demo.obj)
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #define uchar unsigned char 
+   3          #define uint unsigned int 
+   4          uchar temp;
+   5          sbit pulse_x=P1^2; 
+   6          sbit dir_x=P1^3; 
+   7           
+   8          void delayms(uint x)
+   9          {
+  10   1        uint i,j;
+  11   1        for(i=x;i>0;i--)
+  12   1          for(j=110;j>0;j--);
+  13   1      }
+  14          
+  15          void delay(uint x)
+  16          {
+  17   1        uint i,j;
+  18   1        for(i=x;i>0;i--)
+  19   1          for(j=10;j>0;j--);
+  20   1      }
+  21          
+  22          //发送一个字符
+  23          void sendChar(uchar a)
+  24          {
+  25   1        SBUF = a;
+  26   1        while(TI==0);
+  27   1        TI=0;
+  28   1        
+  29   1      }
+  30           
+  31          //发送字符串
+  32          void sendString(uchar *s)
+  33          {
+  34   1        while(*s!='\0')
+  35   1        {
+  36   2          sendChar(*s);
+  37   2          s++;
+  38   2        }
+  39   1          
+  40   1      }
+  41           
+  42          //初始化ESP8266模块
+  43          void initEsp()
+  44          {
+  45   1        TMOD=0x20;    //定时器1工作在方式2
+  46   1        TH1 = 0xfd;   //波特率9600
+  47   1        TL1 = 0xfd;
+  48   1        SM0=0;        //串口工作在方式1
+  49   1        SM1=1;
+  50   1        EA = 1;       //开总中断
+  51   1        REN = 1;      //使能串口
+  52   1        TR1 = 1;      //定时器1开始计时
+  53   1        delayms(2000);      //延时给esp8266处理时间
+  54   1        sendString("AT\r\n");   //模式
+C51 COMPILER V9.60.0.0   DEMO                                                              05/09/2022 15:08:29 PAGE 2   
+
+  55   1        delayms(2000);      //延时给esp8266处理时间
+  56   1        sendString("AT+RST\r\n");   //模式
+  57   1        delayms(2000);
+  58   1        sendString("AT+CWSAP=\"tesest\",\"123456789\",11,0\r\n");   //模式
+  59   1        delayms(2000);
+  60   1        sendString("AT+CIPMUX=1\r\n");    //允许多连接
+  61   1        delayms(2000);  
+  62   1        sendString("AT+CIPSERVER=1\r\n"); //建立TCP Server
+  63   1        delayms(2000);
+  64   1          sendString("AT+CIPSTO=0\r\n");  
+  65   1        ES = 1;       //开串口中断
+  66   1      }
+  67           
+  68          uchar receiveTable[10];
+  69          uint i;
+  70          
+  71          void move_x(uchar dir)
+  72          {
+  73   1        dir_x = dir; 
+  74   1        delay(1);
+  75   1        pulse_x=0;
+  76   1        delay(1);
+  77   1        pulse_x=1;
+  78   1        delay(1); 
+  79   1      }
+  80          
+  81          void main()
+  82          {
+  83   1        i=0;
+  84   1        initEsp();
+  85   1        
+  86   1        while(1);
+  87   1      }
+  88           
+  89          void uart() interrupt 4
+  90          {
+  91   1        
+  92   1          if(RI == 1)//接受完来自wifi模块的数据后开关led
+  93   1           {
+  94   2              RI = 0;//清除串口接收标志位
+  95   2          move_x(0);
+  96   2           }
+  97   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    241    ----
+   CONSTANT SIZE    =     96    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     13    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

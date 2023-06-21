@@ -1,0 +1,621 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2022 23:47:02 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
+                    -.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include<reg52.h>
+   2          #include<intrins.h>
+   3          #define uchar unsigned char
+   4          #define uint  unsigned int
+   5          sbit in1=P1^0;       //抓手控制脉冲输入
+   6          sbit in2=P1^1;       //同上
+   7          sbit pulse_x=P1^2;   //x  dirver
+   8          sbit   dir_x=P1^3;   //同上
+   9          sbit pulse_y=P1^4;   //y  dirver
+  10          sbit   dir_y=P1^5;   //同上
+  11          sbit pulse_z=P1^6;   //z  dirver
+  12          sbit   dir_z=P1^7;   //同上
+  13          sbit relay=P2^0;     //继电器控制口
+  14          sbit trig=P2^1;      
+  15          sbit echo=P2^2;
+  16          sbit dula=P2^6;      //数码管锁存端
+  17          sbit wela=P2^7;      //数码管锁存端
+  18          uchar flag,flag1,a;
+  19          uchar code table[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,
+  20                              0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71};
+  21          unsigned int time;                      
+  22          unsigned char distance;                     
+  23          void delayms(uint xms);//长延时
+  24          void delay(uint x);   //短延时
+  25          uchar matrixkeyscan();//按键控制
+  26          void pump();          //水泵控制
+  27          void grap();          //抓手控制
+  28          void init();          //串口通信初始化
+  29          void manipulator();   //ppp结构操作臂控制
+  30          void start_ultrasonic();//turn on ultrasonic model
+  31          void zdist_cal();     //calculate z axis distance
+  32          void run_ultrasonic();
+  33          void output_serial();                   
+  34                              
+  35          void main()
+  36          {
+  37   1        init();
+  38   1        while(1)
+  39   1        {
+  40   2        run_ultrasonic();
+  41   2        output_serial();
+  42   2        manipulator();
+  43   2        pump();
+  44   2        grap(); 
+  45   2        }
+  46   1      }
+  47          void start_ultrasonic()                            //???????
+  48          {   
+  49   1          trig=1;                         
+  50   1          _nop_();
+  51   1          _nop_();
+  52   1          _nop_();
+  53   1          _nop_();
+  54   1          _nop_();
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2022 23:47:02 PAGE 2   
+
+  55   1          _nop_();
+  56   1          _nop_();
+  57   1          _nop_();
+  58   1          _nop_();
+  59   1          _nop_();
+  60   1          _nop_();
+  61   1          _nop_();
+  62   1          trig=0;                  
+  63   1      } 
+  64          
+  65          void zdist_cal()                            //????
+  66          {   time=TH0*256+TL0;       
+  67   1          distance=time*1.7/100;            
+  68   1          TH0=0x00;           
+  69   1          TL0=0x00;           
+  70   1          flag1=0;              
+  71   1      }
+  72          
+  73          void run_ultrasonic()
+  74          {
+  75   1        start_ultrasonic();                 
+  76   1        while(echo==0);                 //?????????
+  77   1        TR0=1;         
+  78   1        while(echo==1);                 //???????????
+  79   1        TR0=0;         
+  80   1        zdist_cal();         
+  81   1      }
+  82          
+  83          void output_serial()
+  84          {
+  85   1        SBUF=distance;
+  86   1        while(TI==0);           //???TI????1
+  87   1        TI = 0;         
+  88   1      }
+  89          
+  90          
+  91          void delayms(uint xms)
+  92          {
+  93   1        uint i,j;
+  94   1        for(i=xms;i>0;i--)
+  95   1          for(j=110;j>0;j--);
+  96   1      }
+  97          void delay(uint x)
+  98          {
+  99   1        uint i,j;
+ 100   1        for(i=x;i>0;i--)
+ 101   1          for(j=10;j>0;j--);
+ 102   1      }
+ 103          void display(uchar num)
+ 104          {
+ 105   1        P0=table[num];
+ 106   1        dula=1;
+ 107   1        dula=0;
+ 108   1      }
+ 109          uchar matrixkeyscan()
+ 110          {
+ 111   1        uchar temp,key;  
+ 112   1        P3=0xfe;
+ 113   1        temp=P3;
+ 114   1        temp=temp&0xf0;
+ 115   1        if(temp!=0xf0)
+ 116   1        {
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2022 23:47:02 PAGE 3   
+
+ 117   2          delayms(10);
+ 118   2          temp=P3;
+ 119   2          temp=temp&0xf0;
+ 120   2          if(temp!=0xf0)
+ 121   2          {
+ 122   3            temp=P3;
+ 123   3            switch(temp)
+ 124   3            {
+ 125   4            case 0xee:
+ 126   4            //key=0;
+ 127   4            break;
+ 128   4      
+ 129   4            case 0xde:
+ 130   4            key=1;
+ 131   4            break;
+ 132   4      
+ 133   4            case 0xbe:
+ 134   4            //key=2;
+ 135   4            break;
+ 136   4       
+ 137   4            case 0x7e:
+ 138   4            //key=3;
+ 139   4          key=7;
+ 140   4            break;
+ 141   4            }
+ 142   3            while(temp!=0xf0)
+ 143   3            {
+ 144   4             temp=P3;
+ 145   4             temp=temp&0xf0;
+ 146   4            }
+ 147   3            display(key);
+ 148   3          }
+ 149   2        }
+ 150   1        P3=0xfd;
+ 151   1        temp=P3;
+ 152   1        temp=temp&0xf0;
+ 153   1        if(temp!=0xf0)
+ 154   1        {
+ 155   2          delayms(10);
+ 156   2          temp=P3;
+ 157   2          temp=temp&0xf0;
+ 158   2          if(temp!=0xf0)
+ 159   2          {
+ 160   3            temp=P3;
+ 161   3            switch(temp)
+ 162   3            {
+ 163   4            case 0xed:
+ 164   4            //key=4;
+ 165   4          key=3;
+ 166   4            break;
+ 167   4      
+ 168   4            case 0xdd:
+ 169   4            //key=5;
+ 170   4          key=2;
+ 171   4            break;
+ 172   4      
+ 173   4            case 0xbd:
+ 174   4            //key=6;
+ 175   4          key=4;
+ 176   4            break;
+ 177   4      
+ 178   4            case 0x7d:
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2022 23:47:02 PAGE 4   
+
+ 179   4            //key=7;
+ 180   4          key=8;
+ 181   4            break;
+ 182   4            }
+ 183   3            while(temp!=0xf0)
+ 184   3            {
+ 185   4              temp=P3;
+ 186   4              temp=temp&0xf0;
+ 187   4            }
+ 188   3            display(key);
+ 189   3          }
+ 190   2        }
+ 191   1        P3=0xfb;
+ 192   1        temp=P3;
+ 193   1        temp=temp&0xf0;
+ 194   1        if(temp!=0xf0)
+ 195   1        {
+ 196   2          delayms(10);
+ 197   2          temp=P3;
+ 198   2          temp=temp&0xf0;
+ 199   2          if(temp!=0xf0)
+ 200   2          {
+ 201   3            temp=P3;
+ 202   3            switch(temp)
+ 203   3            {
+ 204   4            case 0xeb:
+ 205   4            //key=8;
+ 206   4            break;
+ 207   4      
+ 208   4            case 0xdb:
+ 209   4            //key=9;
+ 210   4          key=5;
+ 211   4            break;
+ 212   4      
+ 213   4            case 0xbb:
+ 214   4            //key=10;
+ 215   4            break;
+ 216   4      
+ 217   4            case 0x7b:
+ 218   4            //key=11;
+ 219   4          key=9;
+ 220   4            break;
+ 221   4            }
+ 222   3            while(temp!=0xf0)
+ 223   3            {
+ 224   4              temp=P3;
+ 225   4              temp=temp&0xf0;
+ 226   4            }
+ 227   3            display(key);
+ 228   3          }
+ 229   2        }
+ 230   1        P3=0xf7;
+ 231   1        temp=P3;
+ 232   1        temp=temp&0xf0;
+ 233   1        if(temp!=0xf0)
+ 234   1        {
+ 235   2          delayms(10);
+ 236   2          temp=P3;
+ 237   2          temp=temp&0xf0;
+ 238   2          if(temp!=0xf0)
+ 239   2          {
+ 240   3            temp=P3;
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2022 23:47:02 PAGE 5   
+
+ 241   3            switch(temp)
+ 242   3            {
+ 243   4              case 0xe7:
+ 244   4              //key=12;
+ 245   4              break;
+ 246   4      
+ 247   4              case 0xd7:
+ 248   4              //key=13;
+ 249   4          key=6;
+ 250   4              break;
+ 251   4      
+ 252   4              case 0xb7:
+ 253   4              //key=14;
+ 254   4              break;
+ 255   4      
+ 256   4              case 0x77:
+ 257   4              //key=15;
+ 258   4          key=10;
+ 259   4              break;
+ 260   4            }
+ 261   3            while(temp!=0xf0)
+ 262   3            {
+ 263   4              temp=P3;
+ 264   4              temp=temp&0xf0;
+ 265   4            }
+ 266   3            display(key);
+ 267   3          }
+ 268   2        }
+ 269   1        return key;
+ 270   1      }
+ 271          void pump()
+ 272          {
+ 273   1       if(matrixkeyscan()==10)
+ 274   1         {
+ 275   2          delayms(1);           
+ 276   2          if(matrixkeyscan()==10)              
+ 277   2           {
+ 278   3            relay=0;
+ 279   3         }
+ 280   2         }
+ 281   1       if(matrixkeyscan()!=10)
+ 282   1         {
+ 283   2          delayms(1);
+ 284   2          if(matrixkeyscan()!=10)
+ 285   2        {
+ 286   3           relay=1;
+ 287   3        }
+ 288   2         }
+ 289   1      }
+ 290          void grap()
+ 291          {
+ 292   1        if (matrixkeyscan()==7)
+ 293   1        {
+ 294   2         delayms(10);
+ 295   2         if (matrixkeyscan()==7)
+ 296   2         {
+ 297   3         in1=1,in2=0;
+ 298   3         }
+ 299   2        }
+ 300   1        if (matrixkeyscan()==8)
+ 301   1        {
+ 302   2         delayms(10);
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2022 23:47:02 PAGE 6   
+
+ 303   2         if (matrixkeyscan()==8)
+ 304   2         {
+ 305   3         in1=0,in2=1;
+ 306   3         }
+ 307   2        }
+ 308   1        if (matrixkeyscan()==9)
+ 309   1        {
+ 310   2         delayms(10);
+ 311   2         if (matrixkeyscan()==9)
+ 312   2         {
+ 313   3         in1=0,in2=0;
+ 314   3         }
+ 315   2        }
+ 316   1      }
+ 317          void init()
+ 318          {
+ 319   1        P0=0;
+ 320   1        dula=1;
+ 321   1        dula=0;
+ 322   1        P0=0xc0;
+ 323   1        wela=1;
+ 324   1        wela=0;
+ 325   1        TMOD=0x20;
+ 326   1        TH1=0xfd;
+ 327   1        TL1=0xfd;
+ 328   1        TR1=1;
+ 329   1        REN=1;
+ 330   1        SM0=0;
+ 331   1        SM1=1;  
+ 332   1        EA=1;
+ 333   1        ES=1;
+ 334   1      }
+ 335          void manipulator()
+ 336          {
+ 337   1        if(matrixkeyscan()==1)//x轴正转
+ 338   1        {
+ 339   2          delayms(1);
+ 340   2          if(matrixkeyscan()==1)
+ 341   2          {
+ 342   3            dir_x = 1;
+ 343   3            while(matrixkeyscan()==1)
+ 344   3            {
+ 345   4              delay(1);
+ 346   4              pulse_x=0;
+ 347   4              delay(1);
+ 348   4              pulse_x=1;
+ 349   4              delay(1);        
+ 350   4            }
+ 351   3          }
+ 352   2        }
+ 353   1        if(matrixkeyscan()==2)//x轴反转
+ 354   1        {
+ 355   2          delayms(1);
+ 356   2          if(matrixkeyscan()==2)
+ 357   2          {
+ 358   3            dir_x = 0;
+ 359   3            while(matrixkeyscan()==2)
+ 360   3            {
+ 361   4              delay(1);
+ 362   4              pulse_x=0;
+ 363   4              delay(1);
+ 364   4              pulse_x=1;
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2022 23:47:02 PAGE 7   
+
+ 365   4              delay(1);        
+ 366   4            }
+ 367   3          } 
+ 368   2        }
+ 369   1        if(matrixkeyscan()==3)//y轴正转
+ 370   1        {
+ 371   2        delayms(1);
+ 372   2        if(matrixkeyscan()==3)
+ 373   2        {
+ 374   3            dir_y = 1;
+ 375   3          while(matrixkeyscan()==3)
+ 376   3            {
+ 377   4              delay(1);
+ 378   4              pulse_y=0;
+ 379   4              delay(1);
+ 380   4              pulse_y=1;
+ 381   4              delay(1);        
+ 382   4            }
+ 383   3          }
+ 384   2        }
+ 385   1        if(matrixkeyscan()==4)//y轴反转
+ 386   1        {
+ 387   2        delayms(1);
+ 388   2        if(matrixkeyscan()==4)
+ 389   2        {
+ 390   3            dir_y = 0;
+ 391   3          while(matrixkeyscan()==4)
+ 392   3            {
+ 393   4              delay(1);
+ 394   4              pulse_y=0;
+ 395   4              delay(1);
+ 396   4              pulse_y=1;
+ 397   4              delay(1);        
+ 398   4            }
+ 399   3          }
+ 400   2        }
+ 401   1        if(matrixkeyscan()==5)//z轴正转
+ 402   1        {
+ 403   2        delayms(1);
+ 404   2        if(matrixkeyscan()==5)
+ 405   2        {
+ 406   3            dir_z = 1;
+ 407   3          while(matrixkeyscan()==5)
+ 408   3            {
+ 409   4              delay(1);
+ 410   4              pulse_z=0;
+ 411   4              delay(1);
+ 412   4              pulse_z=1;
+ 413   4              delay(1);        
+ 414   4            }
+ 415   3          }
+ 416   2        }
+ 417   1        if(matrixkeyscan()==6)//z轴反转
+ 418   1        {
+ 419   2        delayms(1);
+ 420   2        if(matrixkeyscan()==6)
+ 421   2        {
+ 422   3            dir_z = 0;
+ 423   3          while(matrixkeyscan()==6)
+ 424   3            {
+ 425   4              delay(1);
+ 426   4              pulse_z=0;
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2022 23:47:02 PAGE 8   
+
+ 427   4              delay(1);
+ 428   4              pulse_z=1;
+ 429   4              delay(1);        
+ 430   4            }
+ 431   3          }
+ 432   2        }
+ 433   1        if(flag==1)
+ 434   1        {
+ 435   2          RI=0;
+ 436   2          switch(a)
+ 437   2        {
+ 438   3          case 0:            //00000000B:
+ 439   3          break;                
+ 440   3          case 1:                    //00000001B:
+ 441   3          dir_x = 1;
+ 442   3            while(!RI)
+ 443   3            {
+ 444   4              delay(1);
+ 445   4              pulse_x=0;
+ 446   4              delay(1);
+ 447   4              pulse_x=1;
+ 448   4              delay(1);        
+ 449   4            }
+ 450   3          break;
+ 451   3          case 2:                    //00000010B:
+ 452   3          dir_x = 0;
+ 453   3            while(!RI)
+ 454   3            {
+ 455   4              delay(1);
+ 456   4              pulse_x= 0;
+ 457   4              delay(1);
+ 458   4              pulse_x= 1;
+ 459   4              delay(1);        
+ 460   4            }
+ 461   3          break;
+ 462   3            case 4:                    //00000100B:
+ 463   3          dir_y = 1;
+ 464   3            while(!RI)
+ 465   3            {
+ 466   4              delay(1);
+ 467   4              pulse_y= 0;
+ 468   4              delay(1);
+ 469   4              pulse_y= 1;
+ 470   4              delay(1);        
+ 471   4            }
+ 472   3          break;
+ 473   3          case 5:                    //00000101B:
+ 474   3            dir_x = 1;
+ 475   3          dir_y = 1;
+ 476   3            while(!RI)
+ 477   3            {
+ 478   4              delay(1);
+ 479   4              pulse_x= 0;
+ 480   4              delay(1);
+ 481   4              pulse_x= 1;
+ 482   4              delay(1);  
+ 483   4              pulse_y= 0;
+ 484   4              delay(1);
+ 485   4              pulse_y= 1;
+ 486   4              delay(1);  
+ 487   4            }
+ 488   3          break;
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2022 23:47:02 PAGE 9   
+
+ 489   3          case 6:                      //00000110B:
+ 490   3          dir_x = 0;
+ 491   3          dir_y = 1;
+ 492   3            while(!RI)
+ 493   3            {
+ 494   4              delay(1);
+ 495   4              pulse_x= 0;
+ 496   4              delay(1);
+ 497   4              pulse_x= 1;
+ 498   4              delay(1);  
+ 499   4              pulse_y= 0;
+ 500   4              delay(1);
+ 501   4              pulse_y= 1;
+ 502   4              delay(1);  
+ 503   4            }
+ 504   3          break;
+ 505   3          case 8:                       //00001000B:
+ 506   3          dir_y = 0;
+ 507   3            while(!RI)
+ 508   3            {
+ 509   4              delay(1);
+ 510   4              pulse_y= 0;
+ 511   4              delay(1);
+ 512   4              pulse_y= 1;
+ 513   4              delay(1);        
+ 514   4            }
+ 515   3          break;
+ 516   3          case 11:                        //00001001B:
+ 517   3          dir_x = 1;
+ 518   3          dir_y = 0;
+ 519   3          while(!RI)
+ 520   3            {
+ 521   4              delay(1);
+ 522   4              pulse_x= 0;
+ 523   4              delay(1);
+ 524   4              pulse_x= 1;
+ 525   4              delay(1);  
+ 526   4              pulse_y= 0;
+ 527   4              delay(1);
+ 528   4              pulse_y= 1;
+ 529   4              delay(1);  
+ 530   4            }
+ 531   3          break;
+ 532   3          case 12:                       //00001010B:
+ 533   3          dir_x = 0;
+ 534   3          dir_y = 0;
+ 535   3          while(!RI)
+ 536   3            {
+ 537   4              delay(1);
+ 538   4              pulse_x= 0;
+ 539   4              delay(1);
+ 540   4              pulse_x= 1;
+ 541   4              delay(1);  
+ 542   4              pulse_y= 0;
+ 543   4              delay(1);
+ 544   4              pulse_y= 1;
+ 545   4              delay(1);       
+ 546   4            }   
+ 547   3          break;
+ 548   3            case 15:                       //00001111B:   
+ 549   3            break;
+ 550   3          }        
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2022 23:47:02 PAGE 10  
+
+ 551   2            flag=0;
+ 552   2        }
+ 553   1      }       
+ 554          //    if(flag==1)
+ 555          //    {
+ 556          //      ES=0;
+ 557          //      for(i=0;i<6;i++)
+ 558          //      {
+ 559          //        SBUF=table[i];
+ 560          //        while(!TI);
+ 561          //        TI=0;
+ 562          //      }
+ 563          //      SBUF=a;
+ 564          //      while(!TI);
+ 565          //      TI=0;
+ 566          //      ES=1;
+ 567          //      flag=0;
+ 568          //    }
+ 569          
+ 570          void InterruptTimer0() interrupt 1        
+ 571          {
+ 572   1          flag1=1;          
+ 573   1      }
+ 574          
+ 575          void ser() interrupt 4
+ 576          {
+ 577   1        a=SBUF;
+ 578   1        flag=1;
+ 579   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1133    ----
+   CONSTANT SIZE    =     16    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      6       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

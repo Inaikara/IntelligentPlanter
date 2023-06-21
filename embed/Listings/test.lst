@@ -1,0 +1,190 @@
+C51 COMPILER V9.60.0.0   TEST                                                              05/05/2022 11:16:47 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE TEST
+OBJECT MODULE PLACED IN .\Objects\test.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE test.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\test
+                    -.lst) TABS(2) OBJECT(.\Objects\test.obj)
+
+line level    source
+
+   1          #include<reg52.h> 
+   2          #include<intrins.h>
+   3          sbit trig=P2^1;                   //??????
+   4          sbit echo=P2^2;                   //??????
+   5          sbit RS=P3^5;                     //lcd1602??/???
+   6          sbit EN=P3^4;                       //???
+   7          sbit U1=P2^6;                       //?????
+   8          sbit U2=P2^7;                       //?????                      //buzz
+   9          
+  10          unsigned char str[]={"Distance:"};      //lcd?????
+  11          unsigned char juli[]={"0000cm"};        //lcd???????
+  12          unsigned int time;                      //??
+  13          unsigned long s;                      //??
+  14          bit flag1=0;                             //???(???)
+  15          
+  16          void delayms(unsigned int xms);         //??
+  17          void wcmd(unsigned char cmd);
+  18          void wdat(unsigned char dat);
+  19          void wstr(unsigned char addr,unsigned char *p);
+  20          void start();
+  21          void count();
+  22          void run_ultrasonic();
+  23          void Init_display();
+  24          void Init_uart();
+  25          void Init_timer();
+  26          void Init();
+  27          
+  28          
+  29          
+  30          
+  31          void wcmd(unsigned char cmd)            //???
+  32          {
+  33   1          RS = 0;                     
+  34   1          P0 = cmd;
+  35   1        delayms(5);
+  36   1          EN = 1;
+  37   1        delayms(5);
+  38   1          EN = 0;    
+  39   1      }
+  40          void wdat(unsigned char dat)            //???
+  41          {
+  42   1        RS = 1;
+  43   1        P0 = dat;
+  44   1        delayms(5);
+  45   1        EN = 1;
+  46   1        delayms(5);
+  47   1        EN = 0;
+  48   1      }
+  49          
+  50          void wstr(unsigned char addr,unsigned char *p)  
+  51          {
+  52   1          wcmd(addr);     
+  53   1          while(*p!='\0')  
+  54   1          {   wdat(*p);   
+C51 COMPILER V9.60.0.0   TEST                                                              05/05/2022 11:16:47 PAGE 2   
+
+  55   2              p++;        
+  56   2          }    
+  57   1      }
+  58          
+  59          void start()                            //???????
+  60          {   
+  61   1          trig=1;                         
+  62   1          _nop_();
+  63   1          _nop_();
+  64   1          _nop_();
+  65   1          _nop_();
+  66   1          _nop_();
+  67   1          _nop_();
+  68   1          _nop_();
+  69   1          _nop_();
+  70   1          _nop_();
+  71   1          _nop_();
+  72   1          _nop_();
+  73   1          _nop_();
+  74   1          trig=0;                  
+  75   1      }
+  76          
+  77          void count()                            //????
+  78          {   time=TH0*256+TL0;       
+  79   1          s=time*1.7/100;           
+  80   1          juli[3] = s%10+0x30;        
+  81   1          juli[2] = s/10%10+0x30;     
+  82   1          juli[1] = s/100%10+0x30;        
+  83   1          juli[0] = s/1000+0x30;        
+  84   1          wstr(0xC0,"       ");
+  85   1          wstr(0xC0,juli);
+  86   1          TH0=0x00;           
+  87   1          TL0=0x00;           
+  88   1          flag1=0;              
+  89   1      }
+  90          
+  91          void run_ultrasonic()
+  92          {
+  93   1              start();                  
+  94   1              while(echo==0);                 //?????????
+  95   1              TR0=1;         
+  96   1              while(echo==1);                 //???????????
+  97   1              TR0=0;         
+  98   1              count();         
+  99   1              delayms(1000);
+ 100   1              SBUF=s;
+ 101   1              while(TI==0);           //???TI????1
+ 102   1              TI = 0;                 //TI??0,???????
+ 103   1      }
+ 104          
+ 105          void Init_display()                             //1602???
+ 106          {   U1=0;                           
+ 107   1          U2=0;
+ 108   1          EN=0;
+ 109   1          wcmd(0x38);                         //????:8?,2?,5*7
+ 110   1          wcmd(0x0c);                         //????:??,???,??
+ 111   1          wcmd(0x06);                         //????:????,????
+ 112   1          wcmd(0x01);                         //??   
+ 113   1          wstr(0x80,str); 
+ 114   1      }
+ 115          
+ 116          void Init_uart()                             //??
+C51 COMPILER V9.60.0.0   TEST                                                              05/05/2022 11:16:47 PAGE 3   
+
+ 117          {   
+ 118   1          TMOD |= 0x20;                       //?????1  
+ 119   1          TH1 = 0xFD;                         //???9600    
+ 120   1          TL1 = 0xFD;
+ 121   1          TR1 = 1;                            //?????
+ 122   1          REN = 1;                            //??????
+ 123   1          SM0 = 0;                            //???????1
+ 124   1          SM1 = 1;                            
+ 125   1          ES = 1;                             //??????
+ 126   1      }
+ 127          
+ 128          void Init_timer()
+ 129          {
+ 130   1          TMOD=0x01;         
+ 131   1          TH0=0x00;        
+ 132   1          TL0=0x00;        
+ 133   1          EA=1;            
+ 134   1          ET0=1;  
+ 135   1      }
+ 136          
+ 137          void Init()
+ 138          {
+ 139   1        Init_display();
+ 140   1        Init_timer();
+ 141   1        Init_uart();
+ 142   1      }
+ 143          
+ 144          void main()
+ 145          {   
+ 146   1          Init();                         //LCD???                            //?????
+ 147   1          while(1)
+ 148   1          {
+ 149   2            run_ultrasonic();
+ 150   2          }
+ 151   1      }
+ 152          void delayms(unsigned int xms)     
+ 153          { 
+ 154   1          unsigned int i,j;
+ 155   1          for(i=xms;i>0;i--)
+ 156   1              for(j=110;j>0;j--);
+ 157   1      }
+ 158          void InterruptTimer0() interrupt 1        
+ 159          {
+ 160   1          flag1=1;          
+ 161   1      }
+ 162          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    423    ----
+   CONSTANT SIZE    =      8    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     23       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
