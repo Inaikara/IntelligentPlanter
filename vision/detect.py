@@ -181,7 +181,7 @@ def run(
                 
                 #添加内容
                 if save_txt:
-                    shutil.copyfile(txt_path + '.txt', '../Upper/locdata.txt')
+                    shutil.copyfile(txt_path + '.txt', '../comm/locdata.txt')
                     file = open(txt_path + '.txt', 'w').close()
 
 

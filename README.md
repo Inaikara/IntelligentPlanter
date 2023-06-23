@@ -1,13 +1,13 @@
 # 智能种植机
-## 注意事项
+# 注意事项
 本项目所展示代码只适用于华南理工大学自动化学院的种植机项目实验。嵌入式部分的代码有可能由于接线等问题导致错误甚至无法使用，请在使用前仔细检查接线是否正确。
 
-## 快速开始
+# 系统架构
 ![01](./figure/01.png)
 上图表示种植机的系统框架。分为目标检测，嵌入式设计和WIFI通讯三个部分的工作。
-
-## 目标检测
-
+# 目标检测
+目标检测部分基于YOLOv5目标检测框架进行设计，代码保存在vision文件夹内。
+## 环境配置
 ### 安装Miniconda
 
 点击[链接](https://github.com/ultralytics/yolov5)查看YOLOv5源码仓库。YOLOv5目标检测框架基于Pytorch深度学习框架实现，需要首先安装符合版本要求的Python环境和Pytorch框架。
@@ -94,7 +94,7 @@ conda activate yolo #激活yolo虚拟环境
 conda install pytorch==1.9.1 torchvision==0.10.1 torchaudio==0.9.1 cudatoolkit=10.2 -c pytorch
 ```
 
-在虚拟环境运行下面的代码测试能否成功调用GPU。关于如何选择不同虚拟环境的解释器处理代码，每个ide设置方法不同，可以在必应搜索“xxx如何选择python解释器”得到答案。
+在yolo虚拟环境运行下面的代码测试能否成功调用GPU。在前面步骤没有出错的前提下，假如出现。关于如何选择不同虚拟环境的解释器处理代码，每个ide设置方法不同。以vscode为例，可以搜索“vscode如何选择python解释器”。
 
 ```python
 import torch
@@ -117,7 +117,7 @@ print(torch.rand(3,3).cuda())
 （一般的安装教程还会要求安装cudnn，不过我自己测试感觉是不太需要的，可以视情况决定是否安装）
 
 ### 安装YOLOv5依赖
-从[GitHub](https://github.com/ultralytics/yolov5)仓库下载YOLOv5源码，在源码根目录打开终端，在终端输入下面指令：
+打开vision文件夹下的Yolo源码，在源码根目录打开终端，在终端输入下面指令：
 ```bash
 conda activate yolo               # 激活yolo虚拟环境
 pip install -r requirements.txt   # 安装YOLOv5依赖
@@ -125,8 +125,11 @@ pip install -r requirements.txt   # 安装YOLOv5依赖
 
 完成YOLOv5依赖安装。至此YOLOv5目标检测框架运行环境配置完成。
 
-### 数据集制作
-从[roboflow](https://roboflow.com/annotate)进行YOLOv5数据集标注是最方便的，也可以通过Labelimg进行数据集标注。
+# 嵌入式
+我们采用天祥电子的51单片机版作为嵌入式开发平台，代码保存在embed文件夹内。最重要的代码文件是zzjpro.c，其余代码都是编写过程中的测试程序。通过Keil对zzjpro.c进行编译得到hex文件并烧录到单片机上即可。
+
+# 无线通讯
+
 
 
 
