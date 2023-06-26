@@ -266,5 +266,4 @@ if __name__ == "__main__":
     opt = parse_opt()
     main(opt)
 
-#python detect.py  --weights after_train_model/Mask.pt --source 0 --save-txt --save-conf
-#python detect.py  --weights after_train_model/nig7.pt --source 0 --save-txt --save-conf
+#python detect.py  --weights after_train_model/ball.pt --source 0 --save-txt --save-conf

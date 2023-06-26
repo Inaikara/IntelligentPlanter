@@ -5,9 +5,12 @@
 # 系统架构
 ![01](./figure/01.png)
 上图表示种植机的系统框架。分为目标检测，嵌入式设计和WIFI通讯三个部分的工作。
-# 目标检测
+
+# 环境配置
+下面介绍各部分工作的环境配置。
+
+## 目标检测
 目标检测部分基于YOLOv5目标检测框架进行设计，代码保存在vision文件夹内。
-## 环境配置
 ### 安装Miniconda
 
 点击[链接](https://github.com/ultralytics/yolov5)查看YOLOv5源码仓库。YOLOv5目标检测框架基于Pytorch深度学习框架实现，需要首先安装符合版本要求的Python环境和Pytorch框架。
@@ -80,7 +83,7 @@ conda install pytorch==1.9.1 torchvision==0.10.1 torchaudio==0.9.1 cudatoolkit=1
 conda install pytorch==1.9.0 torchvision==0.10.1 torchaudio==0.9.1 cpuonly -c pytorch
 ```
 
-首先查看电脑显卡型号，对于较新型号的NVIDIA显卡强烈建议下载GPU版本，其他类型显卡的电脑建议先买张NVIDIA显卡然后下载GPU版本。CPU版本的Pytorch训练极慢，请珍惜光阴。
+首先查看电脑显卡型号，对于较新型号的NVIDIA显卡建议下载GPU版本，CPU版本的Pytorch训练极慢，只能作为调试使用。
 
 对于CUDA版本的选择，首先保证NVIDIA显卡驱动正确安装，在终端运行：
 ```bash
@@ -94,7 +97,7 @@ conda activate yolo #激活yolo虚拟环境
 conda install pytorch==1.9.1 torchvision==0.10.1 torchaudio==0.9.1 cudatoolkit=10.2 -c pytorch
 ```
 
-在yolo虚拟环境运行下面的代码测试能否成功调用GPU。在前面步骤没有出错的前提下，假如出现。关于如何选择不同虚拟环境的解释器处理代码，每个ide设置方法不同。以vscode为例，可以搜索“vscode如何选择python解释器”。
+在yolo虚拟环境运行下面的代码测试能否成功调用GPU。在前面步骤没有出错的前提下，假如出现找不到库的情况，有可能是因为IDE没有选择正确的Python解释器。
 
 ```python
 import torch
@@ -125,10 +128,43 @@ pip install -r requirements.txt   # 安装YOLOv5依赖
 
 完成YOLOv5依赖安装。至此YOLOv5目标检测框架运行环境配置完成。
 
-# 嵌入式
-我们采用天祥电子的51单片机版作为嵌入式开发平台，代码保存在embed文件夹内。最重要的代码文件是zzjpro.c，其余代码都是编写过程中的测试程序。通过Keil对zzjpro.c进行编译得到hex文件并烧录到单片机上即可。
+## 嵌入式
+我们采用天祥电子的51单片机作为嵌入式开发平台，代码保存在c51文件夹内。最重要的代码是zzjpro.c，其余代码都是编写过程中的测试程序。使用方法为通过Keil对zzjpro.c进行编译得到hex文件，并烧录到单片机上。
 
-# 无线通讯
+## 无线通讯
+无线通讯部分代码保存在comm文件夹内。其中最重要的代码是upper_1.py和upper_2.py，其余代码都是编写过程中的测试程序。需要在当前的虚拟环境中安装serial库。
+
+在完成前面目标检测环境配置的前提下，在终端输入下面指令：
+```bash
+conda activate yolo               # 激活yolo虚拟环境
+pip install pyserial              # 安装serial库
+```
+其中upper_1.py是有线连接上位机代码，upper_2.py是无线连接上位机代码。
+
+# 使用方法
+首先将WebCam与电脑相连，同时将电脑与单片机进行连接，可以通过有线或WIFI的形式。
+
+接着在vision文件夹下打开终端，输入下面命令运行目标检测程序：
+```bash
+conda activate yolo               # 激活yolo虚拟环境
+python detect.py  --weights after_train_model/ball.pt --source 0 --save-txt --save-conf
+```
+
+![02](./figure/02.jpg)
+
+--weights参数代表指定的神经网络模型，这里我们传入的参数表示指定after_train_model文件夹内的ball.pt作为预测使用的神经网络模型。ball.pt是我们预先训练好的一个神经网络模型，它能识别不同颜色的小球以及末端执行器的位置。
+
+--source参数表示输入图像源来自第0个设备，通常我们插入WebCam后这个第0个设备就是我们外接的摄像头了，假如出现黑屏的情况可以尝试改变这里的参数值。
+
+--save-txt和--save-conf参数表示我们将识别到的种类和位置信息保存在一个txt文件中，这个txt文件就是comm文件夹内的locdata.txt。
+
+同时运行上位机程序，该程序主要的工作是读取locdata.txt内的内容转化为控制信号发送给单片机。在comm文件夹打开终端，输入下面命令运行上位机程序：
+```bash
+conda activate yolo               # 激活yolo虚拟环境
+python upper_1.py                 # 有线连接上位机
+```
+
+这里以有线连接为例，对于WIFI连接还要先将计算机跟ESP模块建立连接。并运行upper_2.py文件。
 
 
 

@@ -3,6 +3,7 @@
 #define uchar unsigned char
 #define uint  unsigned int
 
+//接口声明
 sbit in1=P1^0;       
 sbit in2=P1^1;       
 sbit pulse_x=P1^2;   
@@ -17,7 +18,8 @@ sbit echo=P2^5;
 sbit dula=P2^6;      
 sbit wela=P2^7;      
 sbit bee=P2^3;
-		
+	
+//常量声明
 bit  eflag=0;
 uint temp1=0;
 unsigned char rline=0xee;  
@@ -31,6 +33,7 @@ uchar code table_wela[]={0xfe,0xfd,0xfb,0xf7,0xef,0xdf};
 uchar Recive_table[15];
 uint i;
 
+//函数声明
 void delay_us(uchar us);
 void delayms(uint xms);
 void delay(uint x);
@@ -57,7 +60,7 @@ void chuanxing();
 void sendChar(uchar a);
 void sendString(uchar *s);
 
-
+//主函数
 void main()
 {
   uchar value;
